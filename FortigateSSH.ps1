@@ -1,5 +1,7 @@
 # Install Posh-SSH module if not already installed
 if (-not (Get-Module -ListAvailable -Name Posh-SSH)) {
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
+    Install-PackageProvider -Name NuGet -Force
     Install-Module -Name Posh-SSH -Force
 }
 
