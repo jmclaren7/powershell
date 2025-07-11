@@ -34,6 +34,9 @@ $apps = @(
     "Microsoft.XboxGameOverlay"
     "Microsoft.XboxGamingOverlay"
     "Microsoft.XboxSpeechToTextOverlay"
+
+    "Microsoft.GamingApp"
+    
 )
 
 foreach ($app in $apps) {
