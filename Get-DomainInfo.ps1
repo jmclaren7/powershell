@@ -1,3 +1,14 @@
+# Get-DomainInfo.ps1
+# Requires: ActiveDirectory module
+# Description: Get AD domain info - computers and users, active/inactive, enabled/disabled, workstations/servers
+# Home: https://github.com/jmclaren7/powershell/blob/main/Get-DomainInfo.ps1
+# Author: John McLaren
+# Execute with: (iwr -Uri "https://raw.githubusercontent.com/jmclaren7/powershell/refs/heads/main/Get-DomainInfo.ps1" -UseBasicParsing).Content | Invoke-Expression
+
+Import-Module ActiveDirectory -ErrorAction Stop
+Write-Host "Running script: $($MyInvocation.MyCommand.Name)"
+Write-Host "Full command: $($MyInvocation.Line)"
+
 $Days = 60
 $Date = (Get-Date).Adddays(-($Days))
 
