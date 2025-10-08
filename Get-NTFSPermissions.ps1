@@ -98,8 +98,14 @@ function Show-NtfsPermissionsTree {
         Write-Host "No permissions found in the specified location." -ForegroundColor Yellow
         return
     }
-
-    Write-Host "Legend: [!] inheritance disabled  [+] explicit permissions present" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Available Options: " -NoNewLine -ForegroundColor Cyan
+    Write-Host "-IncludeFiles -IncludeInherited -AsObject"
+    Write-Host "Legend: " -NoNewLine -ForegroundColor Cyan
+    Write-Host "[!] " -NoNewline -ForegroundColor Red
+    Write-Host "inheritance disabled   " -NoNewLine
+    Write-Host "[+] " -NoNewLine -ForegroundColor Yellow
+    Write-Host "explicit permissions"
     Write-Host ""
 
     $First = $true
