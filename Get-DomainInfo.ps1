@@ -6,8 +6,15 @@
 # Execute with: (iwr -Uri "https://raw.githubusercontent.com/jmclaren7/powershell/refs/heads/main/Get-DomainInfo.ps1" -UseBasicParsing).Content | Invoke-Expression
 
 Import-Module ActiveDirectory -ErrorAction Stop
-Write-Host "Running script: $($MyInvocation.MyCommand.Name)"
-Write-Host "Full command: $($MyInvocation.Line)"
+
+# If command line arg -diag do this
+if ($args -and $args[0] -eq "-diag") {
+    Write-Host "Environment Information:"
+    $MyInvocation | Format-List *
+    Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)"
+    Write-Host "ActiveDirectory Module Version: $((Get-Module ActiveDirectory).Version)"
+    
+}
 
 $Days = 60
 $Date = (Get-Date).Adddays(-($Days))
