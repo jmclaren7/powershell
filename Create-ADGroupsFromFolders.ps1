@@ -1,5 +1,22 @@
+# Define parameters
+param (
+    # Specify the folder path as a parameter
+    [Parameter(Mandatory = $true)]
+    [string]$FolderPath,
+    # Create groups switch
+    [switch]$CreateGroups,
+    # Set permissions switch
+    [switch]$SetPermissions,
+    # All switch
+    [switch]$All,
+    # Prefix for group names (optional)
+    [string]$GroupNamePrefix = ""
+)
+
+Write-Host "Starting AD group creation process for folders in '$FolderPath'..." -ForegroundColor Cyan
+
 # Function to create AD group
-function New-ADGroup {
+function New-ADFolderGroup {
     param (
         [string]$GroupName,
         [string]$Description,
@@ -11,7 +28,7 @@ function New-ADGroup {
         Write-Host "Group '$GroupName' already exists. Skipping creation." -ForegroundColor Green
     } else {
         # Create the AD group
-        if ($CreateGroups) {
+        if ($CreateGroups -or $All) {
             Write-Host "Creating group '$GroupName'..." -ForegroundColor Yellow
             New-ADGroup -Name $GroupName -GroupScope Global -GroupCategory Security -Description $Description
         }else{
@@ -24,7 +41,7 @@ function New-ADGroup {
         foreach ($ParentGroup in $MemberOf) {
             # Check if parent group exists
             if (-Not (Get-ADGroup -Filter { Name -eq $ParentGroup } -ErrorAction SilentlyContinue)) {
-                Write-Error "Parent group '$ParentGroup' does not exist. Skipping membership addition."
+                Write-Host "Parent group '$ParentGroup' does not exist. Skipping membership addition." -ForegroundColor Red
                 continue
             }
 
@@ -35,11 +52,12 @@ function New-ADGroup {
             }
 
             # Add the group as a member of the parent group
-            if ($CreateGroups) {
+            if ($CreateGroups -or $All) {
                 Write-Host "Adding '$GroupName' as a member of '$ParentGroup'." -ForegroundColor Yellow
                 Add-ADGroupMember -Identity $ParentGroup -Members $GroupName
-            }else{
-                Write-Host "Dry-Run: Adding '$GroupName' as a member of '$ParentGroup'." -ForegroundColor Yellow}
+            } else {
+                Write-Host "Dry-Run: Adding '$GroupName' as a member of '$ParentGroup'." -ForegroundColor Yellow
+            }
         }
     }
 }
@@ -53,7 +71,7 @@ function Set-Permissions {
 
     # Check if the group exists
     if (-Not (Get-ADGroup -Filter { Name -eq $GroupName } -ErrorAction SilentlyContinue)) {
-        Write-Error "Group '$GroupName' does not exist. Cannot set permissions."
+        Write-Host "Group '$GroupName' does not exist. Cannot set permissions." -ForegroundColor Red
         return
     }
 
@@ -67,7 +85,7 @@ function Set-Permissions {
     $Acl.AddAccessRule($AccessRule)
 
     # Set the updated ACL back to the folder
-    if ($SetPermissions) {
+    if ($SetPermissions -or $All) {
         Write-Host "Setting '$AccessRights' permissions for group '$GroupName' on folder '$FolderPath'." -ForegroundColor Yellow
         Set-Acl -Path $FolderPath -AclObject $Acl
     } else {
@@ -78,26 +96,13 @@ function Set-Permissions {
 # Import Active Directory module
 Import-Module ActiveDirectory
 
-# Define parameters
-param (
-    # Specify the folder path as a parameter
-    [Parameter(Mandatory = $true)]
-    [string]$FolderPath,
-    # Create groups switch
-    [switch]$CreateGroups,
-    # Set permissions switch
-    [switch]$SetPermissions,
-    # All switch
-    [switch]$All
-)
-
 # If no -CreateGroups, inform user that changes will not be applied
-if (-Not $CreateGroups) {
+if (-Not $CreateGroups -and -Not $All) {
     Write-Host "Groups will not be created. Use -CreateGroups to create groups." -ForegroundColor Yellow
 }
 
 # If no -SetPermissions, inform user that permissions will not be set
-if (-Not $SetPermissions) {
+if (-Not $SetPermissions -and -Not $All) {
     Write-Host "Permissions will not be set. Use -SetPermissions to set permissions." -ForegroundColor Yellow
 }
 
@@ -107,9 +112,21 @@ if (-Not (Test-Path -Path $FolderPath)) {
     exit
 }
 
-New-ADGroup -GroupName "DataRoot-Read" -Description "Read access group for Data"
-New-ADGroup -GroupName "DataRoot-Write" -Description "Write access group for Data" -MemberOf "DataRoot-Read"
-New-ADGroup -GroupName "DataRoot-Full" -Description "Full control access group for Data" -MemberOf "DataRoot-Read", "DataRoot-Write"
+# Fix the path so case matches the real folder
+$RootFolder = (Get-Item -Path $FolderPath)
+$FolderPath = $RootFolder.FullName
+Write-Host "Root folder detected: $FolderPath" -ForegroundColor Magenta
+$RootFolder | select *
+# If no prefix provided, set default as root folder name
+if ([string]::IsNullOrWhiteSpace($GroupNamePrefix)) {
+    $GroupNamePrefix = $RootFolder.Name
+    $GroupNamePrefix = $GroupNamePrefix -replace '[^a-zA-Z0-9]', ''
+}
+
+# Create main groups for the root folder
+New-ADFolderGroup -GroupName "$GroupNamePrefix--Read" -Description "Read access group for Data"
+New-ADFolderGroup -GroupName "$GroupNamePrefix--Write" -Description "Write access group for Data" -MemberOf "$GroupNamePrefix--Read"
+New-ADFolderGroup -GroupName "$GroupNamePrefix--Full" -Description "Full control access group for Data" -MemberOf "$GroupNamePrefix--Read", "$GroupNamePrefix--Write"
 
 # Get SubFolders in the specified folder
 $SubFolders = Get-ChildItem -Path $FolderPath -Directory
@@ -121,11 +138,11 @@ foreach ($Subfolder in $SubFolders) {
 
     Write-Host "Processing folder: $($Subfolder.FullName) with Safe Name: $SafeFolderName" -ForegroundColor Cyan
 
-    $GroupNameRead = "Data-$SafeFolderName-Read"
-    $GroupNameWrite = "Data-$SafeFolderName-Write"
+    $GroupNameRead = "$GroupNamePrefix-$SafeFolderName-Read"
+    $GroupNameWrite = "$GroupNamePrefix-$SafeFolderName-Write"
 
-    New-ADGroup -GroupName $GroupNameRead -Description "Read access group for $($Subfolder.Name)"
-    New-ADGroup -GroupName $GroupNameWrite -Description "Write access group for $($Subfolder.Name)" -MemberOf $GroupNameRead
+    New-ADFolderGroup -GroupName $GroupNameRead -Description "Read access group for $($Subfolder.Name)"
+    New-ADFolderGroup -GroupName $GroupNameWrite -Description "Write access group for $($Subfolder.Name)" -MemberOf $GroupNameRead
 }
 
 
