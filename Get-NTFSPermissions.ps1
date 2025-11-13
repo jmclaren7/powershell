@@ -1,3 +1,28 @@
+<# Get-NTFSPermissions.ps1
+Version: 1.1
+Date: 2025-11-13
+
+.SYNOPSIS
+    Retrieves NTFS permissions for a specified path.
+.DESCRIPTION
+    This script retrieves NTFS permissions for a specified directory or file path.
+    It can include files, show permissions as objects, and include inherited permissions.
+.PARAMETER Path
+    The directory or file path to retrieve NTFS permissions from.
+.PARAMETER IncludeFiles
+    Include files in the permission report. By default, only directories are included.
+.PARAMETER AsObject
+    Output the permissions as objects instead of formatted text.
+.PARAMETER IncludeInherited
+    Include inherited permissions in the output.   
+.EXAMPLE
+    Get-NTFSPermissions.ps1 -Path "C:\MyFolder"
+
+#>
+
+#Requires -Version 5.1
+#Requires -RunAsAdministrator
+
 [CmdletBinding()]
 param(
     [Parameter(Mandatory, Position = 0)]
