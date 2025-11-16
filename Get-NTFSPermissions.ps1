@@ -21,7 +21,6 @@ Date: 2025-11-13
 #>
 
 #Requires -Version 5.1
-#Requires -RunAsAdministrator
 
 [CmdletBinding()]
 param(
@@ -123,15 +122,27 @@ function Show-NtfsPermissionsTree {
         Write-Host "No permissions found in the specified location." -ForegroundColor Yellow
         return
     }
+
+    # Warn if not running as administrator
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+        Write-Host "This script is not running with administrator privileges. Some permissions may not be accessible." -ForegroundColor Yellow
+    }
     Write-Host ""
-    Write-Host "Available Options: " -NoNewLine -ForegroundColor Cyan
-    Write-Host "-IncludeFiles -IncludeInherited -AsObject"
-    Write-Host "Legend: " -NoNewLine -ForegroundColor Cyan
-    Write-Host "[!] " -NoNewline -ForegroundColor Red
-    Write-Host "inheritance disabled   " -NoNewLine
-    Write-Host "[+] " -NoNewLine -ForegroundColor Yellow
-    Write-Host "explicit permissions"
-    Write-Host ""
+    Write-Host "Options: " -ForegroundColor Cyan
+    Write-Host "    -IncludeFiles"
+    Write-Host "    -IncludeInherited"
+    Write-Host "    -AsObject"
+    Write-Host "Legend: " -ForegroundColor Cyan
+    Write-Host "    [!] " -NoNewline -ForegroundColor Red
+    Write-Host "inheritance disabled   "
+    Write-Host "    [+] " -NoNewline -ForegroundColor Yellow
+    Write-Host "explicit permissions" 
+    If ($IncludeFiles) {
+        Write-Host "    abc " -NoNewline -ForegroundColor Magenta
+        Write-Host "object is a file"
+        
+    }
+    Write-Host "Results:" -ForegroundColor Cyan
 
     $First = $true
     foreach ($entry in $Report | Sort-Object Depth, RelativePath) {
@@ -156,9 +167,33 @@ function Show-NtfsPermissionsTree {
                     $ruleIndent = " " * $indent.Length + " " * 2
                     $ruleMarker = if ($rule.IsInherited) { " " } else { "+" }
                     $ruleColor = if ($rule.IsInherited) { "DarkGray" } else { "White" }
-                    $ruleInheritanceFriendly = if ($rule.InheritanceFlags -eq "None") { "This Object Only" } else { $rule.InheritanceFlags.ToString() }
-                    $ruleText = "{0}{1} {2,-35} {3,-6} {4,-20} {5}" -f $ruleIndent, $ruleMarker, $rule.IdentityReference, $rule.AccessControlType, $rule.FileSystemRights, $ruleInheritanceFriendly
-                    Write-Host $ruleText -ForegroundColor $ruleColor 
+                    
+                    $Rights = $rule.FileSystemRights
+                    $Rights = $Rights -replace "ReadAndExecute", "ReadExecute"
+                    $Rights = $Rights -replace "FullControl", "Full"
+                    $Rights = $Rights -replace "Synchronize", ""
+                    $Rights = $Rights -replace "-?\d+", "Unknown"
+                    $Rights = $Rights -replace "\s+", ""
+                    $Rights = $Rights -replace ",,", ","
+                    $Rights = $Rights.Trim(",")
+
+                    $Extra = ""
+                    If ($rule.AccessControlType -ne "Allow") {
+                        $Extra += "Deny "
+                    }
+                    If ($rule.InheritanceFlags -ne "ContainerInherit, ObjectInherit") { 
+                        $Extra += $rule.InheritanceFlags + " " -replace "None", "NoInherit"
+                    }
+                    
+                    If ($rule.PropagationFlags -ne "None") { 
+                        $Extra += $rule.PropagationFlags + " "
+                    }
+                    $Extra = $Extra.Trim() -replace " ", ","
+
+
+                    $ruleText = "{0}{1} {2,-35} {3,-12} {4}" -f $ruleIndent, $ruleMarker, $rule.IdentityReference, $Rights, $Extra
+                    Write-Host $ruleText -ForegroundColor $ruleColor
+
                 }
             }
             $First = $false
