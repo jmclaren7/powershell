@@ -156,7 +156,8 @@ function Show-NtfsPermissionsTree {
                     $ruleIndent = " " * $indent.Length + " " * 2
                     $ruleMarker = if ($rule.IsInherited) { " " } else { "+" }
                     $ruleColor = if ($rule.IsInherited) { "DarkGray" } else { "White" }
-                    $ruleText = "{0}{1} {2,-35} {3,-6} {4}" -f $ruleIndent, $ruleMarker, $rule.IdentityReference, $rule.AccessControlType, $rule.FileSystemRights
+                    $ruleInheritanceFriendly = if ($rule.InheritanceFlags -eq "None") { "This Object Only" } else { $rule.InheritanceFlags.ToString() }
+                    $ruleText = "{0}{1} {2,-35} {3,-6} {4,-20} {5}" -f $ruleIndent, $ruleMarker, $rule.IdentityReference, $rule.AccessControlType, $rule.FileSystemRights, $ruleInheritanceFriendly
                     Write-Host $ruleText -ForegroundColor $ruleColor 
                 }
             }
