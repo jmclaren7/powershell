@@ -136,12 +136,16 @@ function Show-NtfsPermissionsTree {
     Write-Host "    [!] " -NoNewline -ForegroundColor Red
     Write-Host "inheritance disabled   "
     Write-Host "    [+] " -NoNewline -ForegroundColor Yellow
-    Write-Host "explicit permissions" 
+    Write-Host "explicit permissions present" 
     If ($IncludeFiles) {
         Write-Host "    abc " -NoNewline -ForegroundColor Magenta
         Write-Host "object is a file"
         
     }
+    Write-Host "    Abc " -NoNewline -ForegroundColor DarkGray
+    Write-Host "permission is inherited"
+    Write-Host "  + Abc " -NoNewline -ForegroundColor White
+    Write-Host "permission is explicit"
     Write-Host "Results:" -ForegroundColor Cyan
 
     $First = $true
