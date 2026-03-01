@@ -93,7 +93,7 @@ foreach ($event in $allEvents) {
 # Remove duplicates (in case both Kernel-General and EventLog startup events matched)
 $rebootHistory = $rebootHistory | 
     Sort-Object ShutdownTime -Unique | 
-    Sort-Object ShutdownTime -Descending
+    Sort-Object ShutdownTime -Ascending
 
 if ($rebootHistory.Count -eq 0) {
     Write-Host "No reboot events found in the last $Days days." -ForegroundColor Yellow
@@ -117,7 +117,7 @@ $rebootHistory | ForEach-Object {
 Write-Host ""
 Write-Host "=== Summary ===" -ForegroundColor Cyan
 
-$avgDuration = [TimeSpan]::FromSeconds(($rebootHistory | Measure-Object -Property { $_.Duration.TotalSeconds } -Average).Average)
+$avgDuration = [TimeSpan]::FromSeconds(($rebootHistory | ForEach-Object { $_.Duration.TotalSeconds } | Measure-Object -Average).Average)
 $minDuration = $rebootHistory | Sort-Object { $_.Duration.TotalSeconds } | Select-Object -First 1
 $maxDuration = $rebootHistory | Sort-Object { $_.Duration.TotalSeconds } -Descending | Select-Object -First 1
 
