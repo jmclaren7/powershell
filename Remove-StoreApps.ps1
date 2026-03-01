@@ -1,3 +1,7 @@
+param(
+    [switch]$List
+)
+
 $apps = @(
     "#Microsoft.WindowsStore"
     "Clipchamp.Clipchamp"#CT
@@ -55,6 +59,16 @@ $apps = @(
     "MicrosoftCorporationII.QuickAssist"#CT
     "MSTeams"#CT
 )
+# Combine Get-AppXProvisionedPackage and Get-AppxPackage results and then filter for the apps we want to remove
+$installedApps = @(Get-AppXProvisionedPackage -Online | Select-Object -ExpandProperty DisplayName) + @(Get-AppxPackage -AllUsers | Select-Object -ExpandProperty Name)
+
+if ($List) {
+    $installedApps | Sort-Object
+    exit
+}
+
+$apps = $apps | Where-Object { $installedApps -contains $_ }
+
 
 # Special case for OneDrive
 Write-Host "Uninstalling OneDrive"
@@ -72,6 +86,19 @@ try {
 catch {
     Write-Host "    Failed to uninstall OneDrive: $($_.Exception.Message -replace '\s+', ' ')" -ForegroundColor Red
 }
+
+$appName = "Microsoft OneDrive"
+$Paths = @(
+    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
+    "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+)
+$App = Get-ItemProperty $Paths -EA SilentlyContinue | Where-Object { $_.DisplayName -match $appName } | Select-Object -First 1
+If ($App) { 
+    cmd /c $App.UninstallString /passive /norestart 
+} else { 
+    Write-Output "$appName is not installed." 
+}
+
 
 
 # Remove Store Apps
@@ -119,23 +146,4 @@ foreach ($app in $apps) {
     else {
         Write-Host "    AppxProvisionedPackage not found"
     }
-}
-
-
-
-
-
-
-
-$appName = "Microsoft OneDrive"
-
-$Paths = @(
-    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
-    "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-)
-$App = Get-ItemProperty $Paths -EA SilentlyContinue | Where-Object { $_.DisplayName -match $appName } | Select-Object -First 1
-If ($App) { 
-    cmd /c $App.UninstallString /passive /norestart 
-} else { 
-    Write-Output "$appName is not installed." 
 }
