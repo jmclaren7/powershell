@@ -2,7 +2,7 @@ param(
     [switch]$List
 )
 $classicApps = @(
-    #"Microsoft OneDrive"
+    "Microsoft OneDrive"
 )
 $storeApps = @(
     #"Microsoft.WindowsStore"
@@ -26,11 +26,11 @@ $storeApps = @(
     "Microsoft.Microsoft3DViewer"
     "Microsoft.MicrosoftOfficeHub"
     "Microsoft.MicrosoftSolitaireCollection"
-    "Microsoft.MicrosoftStickyNotes"
+    #"Microsoft.MicrosoftStickyNotes"
     "Microsoft.MixedReality.Portal"
     #"Microsoft.MSPaint"
-    "Microsoft.Office.OneNote"
-    "Microsoft.OutlookForWindows"
+    #"Microsoft.Office.OneNote"
+    #"Microsoft.OutlookForWindows"
     #"Microsoft.Paint"
     "Microsoft.People"
     "Microsoft.PowerAutomateDesktop"
@@ -40,20 +40,20 @@ $storeApps = @(
     "Microsoft.Windows.DevHome"
     "Microsoft.WindowsAlarms"
     #"Microsoft.WindowsCalculator"
-    "Microsoft.WindowsCamera"
+    #"Microsoft.WindowsCamera"
     "microsoft.windowscommunicationsapps" #Mail
-    #"Microsoft.Copilot"#Testing
+    "Microsoft.Copilot"#Testing
     "Microsoft.WindowsFeedbackHub"
     "Microsoft.WindowsMaps"
     #"Microsoft.WindowsNotepad"
     "Microsoft.WindowsPhone"
     #"Microsoft.Windows.Photos"#Testing
-    "Microsoft.WindowsSoundRecorder"
+    #"Microsoft.WindowsSoundRecorder"
     "Microsoft.Xbox.TCUI"
     "Microsoft.XboxApp"
     "Microsoft.XboxGameOverlay"
     "Microsoft.XboxGamingOverlay"
-    "Microsoft.XboxSpeechToTextOverlay"
+    #"Microsoft.XboxSpeechToTextOverlay"
     "Microsoft.YourPhone"
     "Microsoft.ZuneMusic" #Groove Music
     "Microsoft.ZuneVideo" #Movies & TV
